@@ -1,10 +1,10 @@
+import os
 from datetime import timedelta
 
 from fastapi import APIRouter, status, HTTPException, Depends
 from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy.orm import Session
 from dotenv import load_dotenv
-import os
 from ..dependencies import get_db
 from ..schemas.users import UserCreationScheme, UserResponseScheme, Token
 from ..models import UserModel

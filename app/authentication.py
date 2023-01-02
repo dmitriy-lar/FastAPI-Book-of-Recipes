@@ -1,15 +1,13 @@
-import datetime
-from datetime import timedelta
+import os
+from datetime import timedelta, datetime
 from typing import Union
 from jose import JWTError, jwt
 from passlib.context import CryptContext
 from fastapi.security import OAuth2PasswordBearer
 from fastapi import Depends, HTTPException, status
 from dotenv import load_dotenv
-import os
 from .models import UserModel
 from sqlalchemy.orm import Session
-
 from .schemas.users import TokenData
 from .dependencies import get_db
 
@@ -34,9 +32,9 @@ def get_password_hash(password):
 def create_access_token(data: dict, expires_delta: Union[timedelta, None] = None):
     to_encode = data.copy()
     if expires_delta:
-        expire = datetime.datetime.utcnow() + expires_delta
+        expire = datetime.utcnow() + expires_delta
     else:
-        expire = datetime.datetime.utcnow() + timedelta(minutes=15)
+        expire = datetime.utcnow() + timedelta(minutes=15)
     to_encode.update({'exp': expire})
     encoded_jwt = jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
     return encoded_jwt
