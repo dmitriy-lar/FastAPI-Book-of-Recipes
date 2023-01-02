@@ -4,6 +4,7 @@ from .routers import ingredients, users
 from .databases import engine
 from . import models
 
+
 tags_metadata = [
     {
         "name": "Ingredients",

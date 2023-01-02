@@ -5,7 +5,9 @@ from sqlalchemy.orm import Session
 
 from ..dependencies import get_db
 from ..schemas.ingredients import CategoryIngredientScheme
+from ..schemas.users import UserResponseScheme
 from ..models import CategoryIngredientModel
+from ..authentication import get_current_user
 
 router = APIRouter(
     prefix='/ingredients',
@@ -13,14 +15,22 @@ router = APIRouter(
 )
 
 
-@router.post('/category/create', status_code=status.HTTP_201_CREATED, response_model=CategoryIngredientScheme,
-             summary='Create a category for ingredients', response_description='Created category')
-async def create_ingredient_category(category_scheme: CategoryIngredientScheme, db: Session = Depends(get_db)):
+@router.post('/category/create',
+             status_code=status.HTTP_201_CREATED,
+             response_model=CategoryIngredientScheme,
+             summary='Create a category for ingredients',
+             response_description='Created category')
+async def create_ingredient_category(
+        category_scheme: CategoryIngredientScheme,
+        db: Session = Depends(get_db),
+        current_user: UserResponseScheme = Depends(get_current_user)):
     """
     You can create a category with two parameters:
     - _title_ (Name of the category)
     - _description_ (It is not a required parameter. You can leave it blank)
     """
+    if not current_user.is_admin:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail='You do not have enough permissions')
     if db.query(CategoryIngredientModel).filter(CategoryIngredientModel.title == category_scheme.title).first():
         raise HTTPException(status_code=status.HTTP_302_FOUND, detail='This category already exists')
     category = CategoryIngredientModel(**category_scheme.dict())

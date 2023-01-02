@@ -35,5 +35,6 @@ class UserModel(Base):
     email = sqlalchemy.Column(sqlalchemy.String, unique=True, nullable=False)
     password = sqlalchemy.Column(sqlalchemy.String, nullable=False)
     is_admin = sqlalchemy.Column(sqlalchemy.Boolean, nullable=False)
+
     def __str__(self):
         return self.email
