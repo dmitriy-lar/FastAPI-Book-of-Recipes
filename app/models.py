@@ -26,3 +26,14 @@ class IngredientModel(Base):
 
     def __str__(self):
         return self.title
+
+
+class UserModel(Base):
+    __tablename__ = 'users'
+
+    id = sqlalchemy.Column(sqlalchemy.Integer, primary_key=True, index=True)
+    email = sqlalchemy.Column(sqlalchemy.String, unique=True, nullable=False)
+    password = sqlalchemy.Column(sqlalchemy.String, nullable=False)
+    is_admin = sqlalchemy.Column(sqlalchemy.Boolean, nullable=False)
+    def __str__(self):
+        return self.email
