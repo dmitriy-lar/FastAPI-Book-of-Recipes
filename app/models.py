@@ -20,7 +20,7 @@ class IngredientModel(Base):
     __tablename__ = 'ingredients'
 
     id = sqlalchemy.Column(sqlalchemy.Integer, primary_key=True, index=True)
-    title = sqlalchemy.Column(sqlalchemy.String, nullable=False)
+    title = sqlalchemy.Column(sqlalchemy.String, nullable=False, unique=True)
     category_id = sqlalchemy.Column(sqlalchemy.Integer, sqlalchemy.ForeignKey('category_ingredients.id'))
     category = relationship('CategoryIngredientModel', back_populates='ingredients')
 
