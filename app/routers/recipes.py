@@ -114,7 +114,7 @@ async def recipes_list(db: Session = Depends(get_db), current_user: UserResponse
 
 
 @router.get('/{recipe_id}', status_code=status.HTTP_200_OK, summary='Get recipe by id')
-async def get_recipe(recipe_id, db: Session = Depends(get_db),
+async def get_recipe(recipe_id: int, db: Session = Depends(get_db),
                      current_user: UserResponseScheme = Depends(get_current_user)):
     recipe = db.query(RecipesModel, RecipesIngredientsModel.ingredient_id).filter(RecipesModel.id == recipe_id).join(
         RecipesIngredientsModel,
@@ -125,8 +125,10 @@ async def get_recipe(recipe_id, db: Session = Depends(get_db),
 
 
 @router.delete('/delete/{recipe_id}', status_code=status.HTTP_204_NO_CONTENT, summary='Delete a recipe')
-async def delete_recipe(recipe_id, db: Session = Depends(get_db),
+async def delete_recipe(recipe_id: int, db: Session = Depends(get_db),
                         current_user: UserResponseScheme = Depends(get_current_user)):
+    if not current_user.is_admin:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail='You do not have enough permissions')
     recipe = db.query(RecipesModel).filter(RecipesModel.id == recipe_id).first()
     if recipe is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail='Recipe not found')
@@ -135,3 +137,4 @@ async def delete_recipe(recipe_id, db: Session = Depends(get_db),
     for value in ingredients:
         db.delete(value)
     db.commit()
+
