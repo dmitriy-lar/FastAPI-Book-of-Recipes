@@ -30,7 +30,7 @@ app = FastAPI(
         'email': 'larionov.dm2002@gmail.com'
     },
     description="""
-    With this app you can manage recipes
+    With this app you can manage recipes and ingredients
     """
 )
 
