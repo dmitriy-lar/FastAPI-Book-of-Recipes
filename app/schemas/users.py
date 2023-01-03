@@ -9,6 +9,7 @@ class UserCreationScheme(BaseModel):
 
 
 class UserResponseScheme(BaseModel):
+    id: int
     email: EmailStr
     is_admin: bool
 

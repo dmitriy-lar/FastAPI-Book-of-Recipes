@@ -4,7 +4,7 @@ from fastapi import APIRouter, HTTPException, status, Depends
 from sqlalchemy.orm import Session
 from ..authentication import get_current_user
 from ..dependencies import get_db
-from ..schemas.recipes import CategoryRecipeResponseScheme, CategoryRecipeCreationScheme
+from ..schemas.recipes import CategoryRecipeResponseScheme, CategoryRecipeCreationScheme, RecipeCreationScheme
 from ..schemas.users import UserResponseScheme
 from ..models import CategoryRecipesModel, RecipesModel, RecipesIngredientsModel
 
@@ -76,6 +76,62 @@ async def delete_recipe_category(category_id, db: Session = Depends(get_db),
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail='Category was not found')
     db.delete(category)
     db.commit()
-#
-# @router.post('/create', status_code=status.HTTP_201_CREATED, summary='Create a recipe')
-# async def create_recipe()
+
+
+@router.post('/create', status_code=status.HTTP_201_CREATED, summary='Create a recipe',
+             )
+async def create_recipe(recipe_scheme: RecipeCreationScheme, db: Session = Depends(get_db),
+                        current_user: UserResponseScheme = Depends(get_current_user)):
+    if not current_user.is_admin:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail='You do not have enough permissions')
+    if db.query(RecipesModel).filter(RecipesModel.title == recipe_scheme.title).first():
+        raise HTTPException(status_code=status.HTTP_302_FOUND, detail='Recipe already exists')
+    recipe = RecipesModel(
+        title=recipe_scheme.title,
+        category_id=recipe_scheme.category_id,
+        description=recipe_scheme.description,
+        difficulty=recipe_scheme.difficulty
+    )
+    recipe.owner_id = current_user.id
+    db.add(recipe)
+    db.commit()
+    recipe_ingredient = RecipesIngredientsModel()
+    for value in recipe_scheme.ingredients:
+        recipe_ingredient.recipe_id = recipe.id
+        recipe_ingredient.ingredient_id = value.ingredient_id
+        db.add(recipe_ingredient)
+        db.commit()
+        recipe_ingredient = RecipesIngredientsModel()
+    db.refresh(recipe)
+    return recipe
+
+
+@router.get('/list', status_code=status.HTTP_200_OK, summary='List of recipes')
+async def recipes_list(db: Session = Depends(get_db), current_user: UserResponseScheme = Depends(get_current_user)):
+    recipes = db.query(RecipesModel, RecipesIngredientsModel.ingredient_id).join(RecipesIngredientsModel,
+                                                                                 RecipesModel.id == RecipesIngredientsModel.recipe_id).all()
+    return recipes
+
+
+@router.get('/{recipe_id}', status_code=status.HTTP_200_OK, summary='Get recipe by id')
+async def get_recipe(recipe_id, db: Session = Depends(get_db),
+                     current_user: UserResponseScheme = Depends(get_current_user)):
+    recipe = db.query(RecipesModel, RecipesIngredientsModel.ingredient_id).filter(RecipesModel.id == recipe_id).join(
+        RecipesIngredientsModel,
+        RecipesIngredientsModel.recipe_id == recipe_id).all()
+    if not recipe:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail='Recipe not found')
+    return recipe
+
+
+@router.delete('/delete/{recipe_id}', status_code=status.HTTP_204_NO_CONTENT, summary='Delete a recipe')
+async def delete_recipe(recipe_id, db: Session = Depends(get_db),
+                        current_user: UserResponseScheme = Depends(get_current_user)):
+    recipe = db.query(RecipesModel).filter(RecipesModel.id == recipe_id).first()
+    if recipe is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail='Recipe not found')
+    ingredients = db.query(RecipesIngredientsModel).filter(RecipesIngredientsModel.recipe_id == recipe_id).all()
+    db.delete(recipe)
+    for value in ingredients:
+        db.delete(value)
+    db.commit()
