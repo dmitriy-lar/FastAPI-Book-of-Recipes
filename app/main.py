@@ -1,9 +1,8 @@
 from fastapi import FastAPI
 
-from .routers import ingredients, users
+from .routers import ingredients, users, recipes
 from .databases import engine
 from . import models
-
 
 tags_metadata = [
     {
@@ -13,6 +12,10 @@ tags_metadata = [
     {
         'name': 'Users',
         'description': 'You can register and login there'
+    },
+    {
+        'name': 'Recipes',
+        'description': 'You can manage recipes there'
     }
 ]
 
@@ -33,3 +36,4 @@ app = FastAPI(
 
 app.include_router(users.router)
 app.include_router(ingredients.router)
+app.include_router(recipes.router)
